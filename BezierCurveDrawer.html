@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+body{ margin:10px; background:#CCC; }
+#my_canvas{ background:#FFF; border:#000 1px solid; }
+</style>
+<script>
+function initCanvas(){
+    var ctx = document.getElementById('my_canvas').getContext('2d');
+    ctx.canvas.addEventListener('mousemove', function(event){
+        var mouseX = event.clientX - ctx.canvas.offsetLeft;
+        var mouseY = event.clientY - ctx.canvas.offsetTop;
+        var status = document.getElementById('status');
+        status.innerHTML = mouseX+" | "+mouseY;
+    });
+    ctx.canvas.addEventListener('click', function(event){
+		//collecting points in a list
+        var mouseX = event.clientX - ctx.canvas.offsetLeft;
+        var mouseY = event.clientY - ctx.canvas.offsetTop;
+		points.push(mouseX+" "+mouseY);
+		var status = document.getElementById('points');
+        status.innerHTML = points.toString();
+		
+		ctx.beginPath();
+        ctx.fillStyle = "black";
+        ctx.fill();
+		ctx.arc(mouseX, mouseY, 5, 0, 2 * Math.PI);
+		ctx.stroke();
+    });
+}
+window.addEventListener('load', function(event) {
+    initCanvas();
+});
+
+// the list of coordinates
+var points = [];
+
+//This function takes an array of points draws a line through each point
+function drawCurve(arrOfPoints, colour){
+	var ctx = document.getElementById('my_canvas').getContext('2d');
+	if (arrOfPoints.length > 1){
+		//var text = "";
+		var i;
+		for (i = 0; i < (arrOfPoints.length - 1); i++) {
+			var coord = arrOfPoints[i].split(" ");
+			var x = parseInt(coord[0]);
+			var y = parseInt(coord[1]);
+			ctx.beginPath();
+			ctx.moveTo(x,y);
+			
+			var j = i + 1;
+			coord = arrOfPoints[j].split(" ");
+			x = parseInt(coord[0]);
+			y = parseInt(coord[1]);
+			
+			ctx.strokeStyle = colour;
+			ctx.lineTo(x,y);
+			
+			ctx.stroke();
+		}
+	}
+	
+}
+
+function drawBezierCurve(contPointArr, scale){
+	drawCurve(points, "black")
+	var bezierArr = []; 				//this list will contain the final points for the curve
+	var i;	//iterates over moments
+	
+	bezierArr.push(contPointArr[0]);
+	
+	
+	text = getBezierPoint(contPointArr, scale, 0);
+	document.getElementById("linelist").innerHTML = text;
+	
+	if (contPointArr.length < 2){
+		bezierArr = contPointArr;
+	} else if (contPointArr.length == 2){
+		bezierArr = contPointArr;
+	} else if (contPointArr.length > 2){
+		for (i = 1; i < (scale); i++){
+			bezierArr.push(getBezierPoint(contPointArr, scale, i));
+		}
+		bezierArr.push(contPointArr[(contPointArr.length-1)]);
+	}
+	
+	drawCurve(bezierArr, "red")
+}
+
+// This function gives the final bezier point for a given moment
+function getBezierPoint(contPointArr, scale, moment){
+	bezPoint = "";
+	bezTest = "";
+	if (contPointArr.length > 2){
+		var newControlPoints = [];
+		var i;
+		for (i = 0; i < (contPointArr.length-1); i++){
+			var j = i + 1;
+			newControlPoints.push(getSegmentPoints(contPointArr[i], contPointArr[j], scale, moment));
+		}
+		bezPoint = getBezierPoint(newControlPoints, scale, moment);
+	} else if (contPointArr.length == 2){
+		bezPoint = getSegmentPoints(contPointArr[0], contPointArr[1], scale, moment);
+	}
+
+	return bezPoint;
+}
+
+//takes points as strings
+function getSegmentPoints(point1, point2, scale, moment){
+	//var linePoints = [];
+	var lineMoment = "";
+	var i;
+	
+	var firstPoint = point1.split(" ");
+	var firstX = parseInt(firstPoint[0]);
+	var firstY = parseInt(firstPoint[1]);
+	var secondPoint = point2.split(" ");
+	var secondX = parseInt(secondPoint[0]);
+	var secondY = parseInt(secondPoint[1]);
+	var xSegment = (secondX - firstX)/scale;
+	var ySegment = (secondY - firstY)/scale;
+	
+	lineMoment = (firstX+(xSegment*moment))+" "+(firstY+(ySegment*moment));
+	return lineMoment;				
+}
+
+</script>
+</head>
+<body>
+	<canvas id="my_canvas" width="500" height="300"></canvas>
+	<h2 id="status">0 | 0</h2>
+	<p>Click on the points of the bezier curve, then click on the button to draw the curve.<br>
+		To reset the curve, refresh the page.
+	</p>
+	<p id="bezierInfo">Click on the points of the bezier curve, then click on the button to draw the curve.</p>
+	<p id="linelist">linelist</p>
+	
+	
+	<input type=number value='20' id="res"/>
+	<button type="button" onclick="drawBezierCurve(points, document.getElementById('res').value)">Draw Curve.</button>
+	
+	<h3 id="points">document.write(5 + 6)</h3>
+</body>  
+Getting mouse coordinates: <br>
+https://www.youtube.com/watch?v=8pNzjUjvNsY
+<br>
+For setting resolution <br>
+http://stackoverflow.com/questions/7120664/how-can-i-use-input-fields-as-parameters-to-functions-in-javascript
+<br>
+Creating lists in a forloop<br>
+http://stackoverflow.com/questions/6649361/creating-a-new-list-for-each-for-loop
+<br>
+Learning Javascript<br>
+https://www.w3schools.com/js/default.asp
+<br>
+Learning HTML<br>
+https://www.w3schools.com/html/default.asp
+</html>
